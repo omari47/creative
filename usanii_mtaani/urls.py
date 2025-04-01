@@ -29,6 +29,7 @@ urlpatterns = [
     path('portfolio/', include('portfolio.urls')),
     path('workshops/', include('workshops.urls')),
     path('payments/', include('payments.urls')),
+    path('social-auth/', include('social_django.urls', namespace='social')),
 ]
 # Serve media and static files in development
 if settings.DEBUG:

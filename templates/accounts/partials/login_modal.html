@@ -1,0 +1,74 @@
+{% load static %}
+<div id="loginModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-container login-container">
+      <div class="modal-header">
+        <h2>Sign In</h2>
+        <button class="modal-close" onclick="closeModal('loginModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form method="POST" action="{% url 'accounts:login' %}" class="login-form" id="loginForm">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.GET.next|default:request.path }}">
+          
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input type="text" name="username" id="username" placeholder="Email or username" required>
+              <div class="input-line"></div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input type="password" name="password" id="password" placeholder="Password" required>
+              <div class="input-line"></div>
+            </div>
+          </div>
+          
+          <div class="form-options">
+            <div class="remember-me">
+              <input type="checkbox" name="remember_me" id="remember_me">
+              <label for="remember_me">Remember me</label>
+            </div>
+            <a href="#" class="forgot-password">Need help?</a>
+          </div>
+          
+          <button type="submit" class="btn-signin">
+            Sign In
+          </button>
+          
+          <div class="auth-messages" id="loginMessages">
+            {% if form.errors %}
+              <div class="auth-message error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Incorrect username or password.</p>
+              </div>
+            {% endif %}
+          </div>
+        </form>
+        
+        <div class="auth-separator">
+          <span>OR</span>
+        </div>
+        
+        <div class="social-login">
+          <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn google">
+            <i class="fab fa-google"></i>
+            <span>Sign in with Google</span>
+          </a>
+          <a href="{% url 'social:begin' 'facebook' %}" class="social-btn facebook">
+            <i class="fab fa-facebook-f"></i>
+            <span>Sign in with Facebook</span>
+          </a>
+        </div>
+        
+        <div class="modal-footer">
+          <p>New to Sanaa Mtaani? <a href="#" onclick="showRegisterModal()">Sign up now</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ movie.title }} | Sanaa Mtaani{% endblock %}
+
+{% block content %}
+<div class="movie-detail">
+    <div class="container">
+        <div class="movie-header">
+            <div class="movie-poster">
+                <img src="{{ movie.image.url }}" alt="{{ movie.title }}">
+            </div>
+            <div class="movie-info">
+                <h1 class="movie-title">{{ movie.title }}</h1>
+                <div class="movie-meta">
+                    <span><i class="fas fa-clock"></i> {{ movie.duration }}</span>
+                    <span><i class="fas fa-star"></i> {{ movie.rating }}/10</span>
+                    {% if movie.categories_str %}
+                    <span><i class="fas fa-tag"></i> {{ movie.categories_str }}</span>
+                    {% endif %}
+                </div>
+                <div class="movie-price">
+                    <span>KSh {{ movie.price }}</span>
+                </div>
+                <div class="movie-description">
+                    <p>{{ movie.description }}</p>
+                </div>
+                <div class="movie-actions">
+                    {% if has_paid %}
+                        <a href="{% url 'movies:watch' movie.id %}" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Watch Movie
+                        </a>
+                    {% else %}
+                        <a href="{% url 'payments:process' movie.id %}" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart"></i> Rent for KSh {{ movie.price }}
+                        </a>
+                    {% endif %}
+                    
+                    {% if movie.trailer_url %}
+                        <button class="btn btn-secondary btn-watch" data-trailer-url="{{ movie.trailer_url }}" data-trailer-title="{{ movie.title }}">
+                            <i class="fas fa-play"></i> Watch Trailer
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trailer Modal -->
+<div class="trailer-modal" id="trailerModal">
+    <div class="trailer-modal-content">
+        <div class="trailer-modal-header">
+            <h3 id="trailerModalTitle">{{ movie.title }} - Trailer</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="trailer-modal-body">
+            <div class="trailer-frame-container">
+                <iframe id="trailerFrame" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment for {{ movie.title }} | Sanaa Mtaani{% endblock %}
+
+{% block content %}
+<section class="payment-section">
+    <div class="container">
+        <div class="payment-container">
+            <div class="payment-header">
+                <h1>Complete Your Purchase</h1>
+                <div class="movie-summary">
+                    <div class="movie-image">
+                        <img src="{{ movie.image.url }}" alt="{{ movie.title }}">
+                    </div>
+                    <div class="movie-info">
+                        <h2>{{ movie.title }}</h2>
+                        <div class="movie-meta">
+                            <span><i class="fas fa-clock"></i> {{ movie.duration }}</span>
+                            <span><i class="fas fa-star"></i> {{ movie.rating }}/10</span>
+                        </div>
+                        <div class="movie-price">
+                            <span>KSh {{ movie.price }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-methods">
+                <h3>Select Payment Method</h3>
+                
+                <div class="payment-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="mpesa">
+                            <img src="{% static 'images/mpesa-logo.png' %}" alt="M-Pesa">
+                            <span>M-Pesa</span>
+                        </button>
+                        <button class="tab-btn" data-tab="paypal">
+                            <img src="{% static 'images/paypal-logo.png' %}" alt="PayPal">
+                            <span>PayPal</span>
+                        </button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <!-- M-Pesa Tab -->
+                        <div class="tab-pane active" id="mpesa-tab">
+                            <div class="payment-form-container">
+                                <form id="mpesa-form" class="payment-form">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="phone_number">Phone Number (254...)</label>
+                                        <input type="text" id="phone_number" name="phone_number" placeholder="2547XXXXXXXX" required>
+                                        <small>Enter your phone number in the format 254XXXXXXXXX</small>
+                                    </div>
+                                    <input type="hidden" name="payment_method" value="mpesa">
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn pay-btn">
+                                            <i class="fas fa-mobile-alt"></i> Pay with M-Pesa
+                                        </button>
+                                    </div>
+                                </form>
+                                <div class="mpesa-instructions">
+                                    <h4>How to Pay with M-Pesa</h4>
+                                    <ol>
+                                        <li>Enter your M-Pesa registered phone number</li>
+                                        <li>Click the "Pay with M-Pesa" button</li>
+                                        <li>You'll receive a prompt on your phone</li>
+                                        <li>Enter your M-Pesa PIN to complete the payment</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PayPal Tab -->
+                        <div class="tab-pane" id="paypal-tab">
+                            <div class="payment-form-container">
+                                <form id="paypal-form" class="payment-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="paypal">
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn pay-btn">
+                                            <i class="fab fa-paypal"></i> Pay with PayPal
+                                        </button>
+                                    </div>
+                                </form>
+                                <div class="paypal-instructions">
+                                    <h4>How to Pay with PayPal</h4>
+                                    <ol>
+                                        <li>Click the "Pay with PayPal" button</li>
+                                        <li>You'll be redirected to PayPal</li>
+                                        <li>Login to your PayPal account or pay as a guest</li>
+                                        <li>Confirm the payment to complete your purchase</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-info">
+                <div class="info-item">
+                    <i class="fas fa-lock"></i>
+                    <span>Secure Payment</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Instant Access</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-headset"></i>
+                    <span>24/7 Support</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Payment Processing Modal -->
+<div class="payment-modal" id="processingModal">
+    <div class="payment-modal-content">
+        <div class="payment-loader"></div>
+        <h3>Processing Payment</h3>
+        <p>Please wait while we process your payment...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Process payment function
+    function processPayment(form, method) {
+        // Show processing modal
+        document.getElementById('processingModal').classList.add('show');
+        
+        // Get form data
+        const formData = new FormData(form);
+        
+        // Send AJAX request
+        fetch('{% url "payments:process_payment" movie.id %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide processing modal
+            document.getElementById('processingModal').classList.remove('show');
+            
+            if (data.success) {
+                if (data.redirect_url) {
+                    // Redirect to PayPal
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Show success notification for M-Pesa
+                    showNotification('success', data.message);
+                    
+                    // Redirect to payment status page after delay
+                    setTimeout(() => {
+                        window.location.href = '{% url "payments:history" %}';
+                    }, 3000);
+                }
+            } else {
+                // Show error notification
+                showNotification('error', data.error || 'Payment processing failed');
+            }
+        })
+        .catch(error => {
+            // Hide processing modal
+            document.getElementById('processingModal').classList.remove('show');
+            
+            // Show error notification
+            showNotification('error', 'An error occurred. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+    
+    // M-Pesa form submission
+    const mpesaForm = document.getElementById('mpesa-form');
+    if (mpesaForm) {
+        mpesaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            processPayment(this, 'mpesa');
+        });
+    }
+    
+    // PayPal form submission
+    const paypalForm = document.getElementById('paypal-form');
+    if (paypalForm) {
+        paypalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            processPayment(this, 'paypal');
+        });
+    }
+
+    // Notification function
+    function showNotification(type, message) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 5000);
+    }
+    
+    // Phone number validation for M-Pesa
+    const phoneInput = document.getElementById('phone_number');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            
+            // Ensure it starts with 254
+            if (!value.startsWith('254') && value.length > 0) {
+                if (value.startsWith('0')) {
+                    value = '254' + value.substring(1);
+                } else {
+                    value = '254' + value;
+                }
+            }
+            
+            // Limit to 12 digits (254 + 9 digits)
+            if (value.length > 12) {
+                value = value.substring(0, 12);
+            }
+            
+            this.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}

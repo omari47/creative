@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -12,54 +13,16 @@
             <p class="hero-subtitle">Photography, Videography, and Movie Production that captures the soul of Kenya's creative spirit.</p>
             <div class="hero-buttons">
                 <a href="#portfolio" class="btn">Explore Our Work</a>
-                <a href="{% url 'core:about' %}" class="btn btn-secondary">Learn More</a>
+                {% if featured_movie %}
+                    <a href="{% url 'movies:detail' featured_movie.id %}" class="btn btn-secondary">Watch Now</a>
+                {% else %}
+                    <a href="#movies" class="btn btn-secondary">Watch Now</a>
+                {% endif %}
             </div>
         </div>
     </div>
 </section>
 
-<!-- Latest Productions Section -->
-{#<section id="trailers" class="section-padding">#}
-{#    <div class="container">#}
-{#        <h2 class="section-title">Latest Productions</h2>#}
-{#        <p class="section-subtitle">Immerse yourself in our storytelling</p>#}
-{#        #}
-{#        <div class="trailers-carousel">#}
-{#            {% if trailers %}#}
-{#                {% for trailer in trailers %}#}
-{#                <div class="trailer-card">#}
-{#                    <img src="{{ trailer.image.url }}" alt="{{ trailer.title }}">#}
-{#                    <div class="trailer-overlay">#}
-{#                        <h3 class="trailer-title">{{ trailer.title }}</h3>#}
-{#                    </div>#}
-{#                    <a href="{{ trailer.trailer_url }}" class="play-icon" data-bs-toggle="modal" data-bs-target="#trailerModal{{ trailer.id }}">#}
-{#                        <i class="fas fa-play"></i>#}
-{#                    </a>#}
-{#                </div>#}
-{#                #}
-{#                <!-- Trailer Modal -->#}
-{#                <div class="modal fade" id="trailerModal{{ trailer.id }}" tabindex="-1" aria-hidden="true">#}
-{#                    <div class="modal-dialog modal-lg">#}
-{#                        <div class="modal-content">#}
-{#                            <div class="modal-header">#}
-{#                                <h5 class="modal-title">{{ trailer.title }}</h5>#}
-{#                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>#}
-{#                            </div>#}
-{#                            <div class="modal-body">#}
-{#                                <div class="ratio ratio-16x9">#}
-{#                                    <iframe src="{{ trailer.trailer_url }}" allowfullscreen></iframe>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
-{#                {% endfor %}#}
-{#            {% else %}#}
-{#                <p class="text-center">No trailers available at the moment.</p>#}
-{#            {% endif %}#}
-{#        </div>#}
-{#    </div>#}
-{#</section>#}
 <!-- Latest Productions Section -->
 <section id="trailers" class="section-padding">
     <div class="container">
@@ -117,8 +80,9 @@
         </div>
     </div>
 </div>
+
 <!-- Portfolio Section -->
-<section id="portfolio" class="section-padding bg-light">
+<section id="portfolio" class="section-padding">
     <div class="container">
         <h2 class="section-title">Our Portfolio</h2>
         <p class="section-subtitle">Explore our diverse collection of photography, videography, and film production work</p>
@@ -131,7 +95,12 @@
                     <div class="portfolio-overlay">
                         <h3 class="portfolio-title">{{ item.title }}</h3>
                         <p class="portfolio-category">{{ item.category.name }}</p>
-                        <a href="{% url 'portfolio:detail' item.id %}" class="btn btn-secondary">View Details</a>
+                        <div class="portfolio-buttons">
+                            <a href="{% url 'portfolio:detail' item.id %}" class="btn btn-secondary">View Details</a>
+                            {% if item.movie %}
+                                <a href="{% url 'movies:detail' item.movie.id %}" class="btn">Watch Movie</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -139,16 +108,12 @@
                 <p class="text-center">Portfolio items coming soon.</p>
             {% endif %}
         </div>
-        
-        <div class="text-center mt-5">
-            <a href="{% url 'portfolio:index' %}" class="btn">View All Work</a>
-        </div>
     </div>
 </section>
 
 <!-- Featured Movie Section -->
 {% if featured_movie %}
-<section id="featured-movie" class="section-padding">
+<section id="movies" class="section-padding">
     <div class="container">
         <h2 class="section-title">Featured Movie</h2>
         <p class="section-subtitle">Our latest blockbuster production</p>
@@ -162,79 +127,32 @@
                 <div class="featured-movie-meta">
                     <span><i class="fas fa-clock"></i> {{ featured_movie.duration }}</span>
                     <span><i class="fas fa-star"></i> {{ featured_movie.rating }}/10</span>
-                    <span><i class="fas fa-tags"></i> {{ featured_movie.categories_str }}</span>
+                    {% if featured_movie.categories_str %}
+                    <span><i class="fas fa-tag"></i> {{ featured_movie.categories_str }}</span>
+                    {% endif %}
                 </div>
-                <p class="featured-movie-description">{{ featured_movie.description }}</p>
+                <div class="featured-movie-description">
+                    <p>{{ featured_movie.description }}</p>
+                </div>
+                <div class="featured-movie-price">
+                    <span>KSh {{ featured_movie.price }}</span>
+                </div>
                 <div class="featured-movie-actions">
-                    <a href="{% url 'movies:detail' featured_movie.id %}" class="btn">Watch Now</a>
-                    {% if featured_movie.trailer_url %}
-                    <a href="{{ featured_movie.trailer_url }}" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#featuredTrailerModal">
-                        <i class="fas fa-play me-2"></i> Watch Trailer
+                    <a href="{% url 'payments:process' featured_movie.id %}" class="btn">
+                        <i class="fas fa-shopping-cart"></i> Rent for KSh {{ featured_movie.price }}
                     </a>
+                    {% if featured_movie.trailer_url %}
+                    <button class="btn btn-secondary btn-watch" data-trailer-url="{{ featured_movie.trailer_url }}" data-trailer-title="{{ featured_movie.title }}">
+                        <i class="fas fa-play"></i> Watch Trailer
+                    </button>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-        <!-- Featured Movie Trailer Modal -->
-        {% if featured_movie.trailer_url %}
-        <div class="modal fade" id="featuredTrailerModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">{{ featured_movie.title }} - Trailer</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="ratio ratio-16x9">
-                            <iframe src="{{ featured_movie.trailer_url }}" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
 </section>
 {% endif %}
 
-<!-- Workshops Section -->
-{#<section id="workshops" class="section-padding bg-light">#}
-{#    <div class="container">#}
-{#        <h2 class="section-title">Upcoming Workshops</h2>#}
-{#        <p class="section-subtitle">Learn from industry professionals and develop your creative skills</p>#}
-{#        #}
-{#        <div class="workshops-grid">#}
-{#            {% if workshops %}#}
-{#                {% for workshop in workshops %}#}
-{#                <div class="workshop-card">#}
-{#                    <div class="workshop-image">#}
-{#                        <img src="{{ workshop.image.url }}" alt="{{ workshop.title }}">#}
-{#                    </div>#}
-{#                    <div class="workshop-content">#}
-{#                        <h3 class="workshop-title">{{ workshop.title }}</h3>#}
-{#                        <div class="workshop-meta">#}
-{#                            <span><i class="far fa-calendar-alt"></i> {{ workshop.date }}</span>#}
-{#                            <span><i class="fas fa-map-marker-alt"></i> {{ workshop.location }}</span>#}
-{#                        </div>#}
-{#                        <p class="workshop-description">{{ workshop.description|truncatewords:20 }}</p>#}
-{#                        <div class="d-flex justify-content-between align-items-center">#}
-{#                            <span class="workshop-price">{{ workshop.price }} KES</span>#}
-{#                            <a href="{% url 'workshops:detail' workshop.id %}" class="btn">Register Now</a>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
-{#                {% endfor %}#}
-{#            {% else %}#}
-{#                <p class="text-center">No upcoming workshops scheduled. Check back soon!</p>#}
-{#            {% endif %}#}
-{#        </div>#}
-{#        #}
-{#        <div class="text-center mt-5">#}
-{#            <a href="{% url 'workshops:index' %}" class="btn">View All Workshops</a>#}
-{#        </div>#}
-{#    </div>#}
-{#</section>#}
 <!-- Workshops Section -->
 <section id="workshops" class="section-padding">
     <div class="container">
@@ -249,7 +167,7 @@
                         {% if workshop.image %}
                             <img src="{{ workshop.image.url }}" alt="{{ workshop.title }}">
                         {% else %}
-                            <img src="{% static 'images/workshop-placeholder.jpg' %}" alt="{{ workshop.title }}">
+                            <img src="{% static 'images/hero-bg.jpg' %}" alt="{{ workshop.title }}">
                         {% endif %}
                     </div>
                     <div class="workshop-content">
@@ -261,7 +179,7 @@
                         <p class="workshop-description">{{ workshop.description|truncatechars:100 }}</p>
                         <div class="workshop-footer">
                             <span class="workshop-price">KSh {{ workshop.price }}</span>
-                            <a href="#" class="btn btn-secondary">Register Now</a>
+                            <a href="{% url 'workshops:detail' workshop.id %}" class="btn">Register Now</a>
                         </div>
                     </div>
                 </div>
@@ -274,37 +192,41 @@
         </div>
     </div>
 </section>
+
 <!-- About Section -->
 <section id="about" class="section-padding">
     <div class="container">
-        <h2 class="section-title">About Us</h2>
-        <p class="section-subtitle">Who we are and what we do</p>
+        <h2 class="section-title">About Sanaa Mtaani</h2>
+        <p class="section-subtitle">Kenya's premier creative production company</p>
         
         <div class="about-content">
             <div class="about-text">
-                <p>Sanaa Mtaani is a leading creative production company based in Nairobi, Kenya. We specialize in film production, photography, and videography services that capture the essence of Kenya's vibrant creative culture.</p>
-                <p>Our team of passionate professionals brings years of experience and a keen eye for detail to every project. We believe in the power of visual storytelling to inspire, educate, and entertain.</p>
-                <a href="{% url 'core:about' %}" class="btn mt-3">Learn More About Us</a>
-            </div>
-            
-            <div class="about-stats">
-                {% for stat in stats %}
-                <div class="stat-item">
-                    <div class="stat-value">{{ stat.value }}</div>
-                    <div class="stat-label">{{ stat.label }}</div>
+                <p>Sanaa Mtaani is a creative production company based in Nairobi, Kenya. We specialize in film production, photography, videography, and creative workshops that capture the unique essence of Kenya's urban culture.</p>
+                <p>Our team of talented professionals is passionate about storytelling and creating visually stunning content that resonates with audiences across Africa and beyond. We believe in the power of art to inspire, educate, and transform communities.</p>
+                
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">100+</div>
+                        <div class="stat-label">Projects Completed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">50+</div>
+                        <div class="stat-label">Happy Clients</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">20+</div>
+                        <div class="stat-label">Awards Won</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">30+</div>
+                        <div class="stat-label">Workshops Conducted</div>
+                    </div>
                 </div>
-                {% endfor %}
+            </div>
+            <div class="about-image">
+                <img src="{% static 'images/about.jpeg' %}" alt="About Sanaa Mtaani">
             </div>
         </div>
     </div>
 </section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Initialize trailer carousel if needed
-    document.addEventListener('DOMContentLoaded', function() {
-        // Your carousel initialization code here
-    });
-</script>
 {% endblock %}
