@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 from django.db import models
 # bhgfjdkgiokgibtkd[pg[r
-
+# ughdbrmhjbmrdgveorgbbrgvmor
 class Category(models.Model):
     """Categories for portfolio items"""
     name = models.CharField(max_length=50)
